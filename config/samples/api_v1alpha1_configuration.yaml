@@ -1,0 +1,7 @@
+apiVersion: api.tutorial.kubebuilder.io/v1alpha1
+kind: Configuration
+metadata:
+  name: configuration-sample
+spec:
+  type: "madmmas"
+  setting: "example-setting"
