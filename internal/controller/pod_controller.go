@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -46,9 +47,28 @@ type PodReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
 func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	l := logf.FromContext(ctx)
 
-	// TODO(user): your logic here
+	pod := &corev1.Pod{}
+	if err := r.Get(ctx, req.NamespacedName, pod); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	l.Info("Pod", "Name", pod.Name, "Namespace", pod.Namespace)
+
+	if pod.Namespace == "default" {
+		podAnnotations := pod.Annotations
+		if strings.Contains(pod.Name, "multi-container") {
+			podAnnotations["test"] = "mas-demo-pod-multi-deployment"
+			podAnnotations["pod-anno"] = "multi-deployment"
+		} else {
+			podAnnotations["test"] = "mas-demo-pod-nginx"
+		}
+
+		if err := r.Update(ctx, pod); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }
